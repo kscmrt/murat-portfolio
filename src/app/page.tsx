@@ -38,6 +38,19 @@ import {
   Wrench,
   Gauge,
   Compass,
+  Search,
+  AlertTriangle,
+  QrCode,
+  DollarSign,
+  TrendingUp,
+  HelpCircle,
+  FolderGit2,
+  RefreshCw,
+  Eye,
+  Car,
+  Truck,
+  HardDrive,
+  CpuIcon,
 } from "lucide-react";
 
 function GithubIcon({ className = "w-5 h-5" }: { className?: string }) {
@@ -54,39 +67,99 @@ function GithubIcon({ className = "w-5 h-5" }: { className?: string }) {
 
 export default function Home() {
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<"projects" | "simulator" | "terminal" | "skills" | "cv">("projects");
-  const [selectedProject, setSelectedProject] = useState<string>("blain-erp");
-  const [projectCategory, setProjectCategory] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<"journey" | "projects" | "hydraulic-calc" | "troubleshooting" | "terminal" | "stack">("journey");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("hydraulic-portal");
+  const [projectFilter, setProjectFilter] = useState<string>("all");
 
   // --- Interactive Engineering Simulator State ---
-  const [carWeight, setCarWeight] = useState<number>(630); // kg
-  const [payload, setPayload] = useState<number>(450); // kg (6 persons)
-  const [ramWeight, setRamWeight] = useState<number>(120); // kg
-  const [ratio, setRatio] = useState<1 | 2>(2); // 1:1 or 2:1
-  const [pistonDiameter, setPistonDiameter] = useState<number>(70); // mm
+  const [carWeight, setCarWeight] = useState<number>(630);
+  const [payload, setPayload] = useState<number>(450);
+  const [ramWeight, setRamWeight] = useState<number>(120);
+  const [ratio, setRatio] = useState<1 | 2>(2);
+  const [pistonDiameter, setPistonDiameter] = useState<number>(70);
+  const [speed, setSpeed] = useState<number>(0.63);
 
   // Hydraulic Calculations (EN 81-20 Standard)
   const g = 9.81;
   const effectiveMass = (carWeight + payload) * (ratio === 2 ? 0.5 : 1.0) + ramWeight;
-  const actingForce = 1.4 * g * effectiveMass; // N (with 1.4 dynamic factor)
-  const pistonArea = Math.PI * Math.pow(pistonDiameter / (2 * 10), 2); // cm^2
-  const staticPressureBar = (effectiveMass * g) / (pistonArea * 10); // bar
-  const dynamicPressureBar = actingForce / (pistonArea * 10); // bar
+  const actingForce = 1.4 * g * effectiveMass;
+  const pistonArea = Math.PI * Math.pow(pistonDiameter / (2 * 10), 2);
+  const staticPressureBar = (effectiveMass * g) / (pistonArea * 10);
+  const dynamicPressureBar = actingForce / (pistonArea * 10);
+  // Flow required: Q = (Area * v * 6) / ratio  [l/min]
+  const ramSpeed = ratio === 2 ? speed / 2 : speed;
+  const requiredFlowLpm = (pistonArea * ramSpeed * 60) / 10;
+  const estimatedMotorKw = (requiredFlowLpm * dynamicPressureBar) / 450;
+
+  // --- Troubleshooting Interactive Lookup ---
+  const [searchProblem, setSearchProblem] = useState("");
+  const troubleshootingCases = [
+    {
+      code: "OBD: P0420",
+      domain: "Otomotiv / Motor Yönetimi",
+      title: "Katalitik Konvertör Sistem Verimliliği Eşik Altında",
+      symptom: "Motor arıza lambası (Check Engine), yakıt tüketiminde artış.",
+      approach: "Doğrudan katalizör değiştirmek yerine O2 sensör 1 (upstream) ve sensör 2 (downstream) voltaj salınımlarını ELM327 ile canlı grafikleyip egzoz kaçağı, buji ve lambda yanıt sürelerini test ettim.",
+      solution: "Sensör 2 voltajının dalgalanma frekansını analiz ederek katalitik konvertör gözenek tıkanıklığını ve lambda yanıtını doğrulayıp hedefe yönelik müdahale sağladım.",
+    },
+    {
+      code: "OBD: P22FB",
+      domain: "Otomotiv / Emisyon & Sensör",
+      title: "NOx Sensörü Performans / Sinyal Algılama Hatası",
+      symptom: "DPF/AdBlue sistemi emisyon uyarısı ve tork kısıtlama riski.",
+      approach: "Sensörün CAN-bus haberleşme dirençlerini (60 ohm terminasyon) ve besleme voltajını ölçüp sensör probu kurum kirliliği ile ECU kontrol ünitesi arasındaki sinyal kesintisini izole ettim.",
+      solution: "Isıtıcı devresi ve veri hattı sürekliliği test edilerek sensör ünitesi kalibre edildi.",
+    },
+    {
+      code: "API: HTTP 401 / Unauthorized",
+      domain: "AI Gateway & Web Servisleri",
+      title: "Model Sağlayıcı Kimlik Doğrulama / Bearer Token Geçersizliği",
+      symptom: "AI agent isteklerinin failover mekanizmasına düşmeden anında kesilmesi.",
+      approach: "Header formatlarını, token expire sürelerini ve proxy katmanındaki Authorization rewrite kurallarını inceledim.",
+      solution: "OmniRoute üzerinde provider bazlı dinamik token yenileme ve header normalizasyonu kuralı uygulandı.",
+    },
+    {
+      code: "API: HTTP 503 / Provider Overload",
+      domain: "AI Router & Dağıtık Sistemler",
+      title: "Yapay Zekâ Sağlayıcı Servis Kesintisi veya Hız Sınırı",
+      symptom: "Kullanıcı taleplerinde stream akışının kopması veya uzun gecikmeler.",
+      approach: "Hata oranını SSE akışından anlık yakalayan ve milisaniyeler içinde alternatif LLM modeline yönlendiren akıllı retry/circuit-breaker katmanı kurdum.",
+      solution: "Kullanıcı fark etmeden DeepSeek / Claude / OpenAI modelleri arasında dinamik failover sağlandı.",
+    },
+    {
+      code: "Linux: RAM / CPU Resource Pressure",
+      domain: "Ubuntu Server & Docker",
+      title: "Docker Container OOM (Out of Memory) Kapanmaları",
+      symptom: "Arka plan otomasyon servislerinin (PM2/Remotion) aniden çökmesi.",
+      approach: "Kernel dmesg loglarını ve `/proc/meminfo` metriklerini inceleyerek headless Chrome video render süreçlerinin geçici bellek sızıntısını tespit ettim.",
+      solution: "ZRAM / Swap yapılandırması optimize edildi, Docker `--memory` limitleri belirlendi ve süreçler için otomatik garbage collection tetikleyicisi yazıldı.",
+    },
+  ];
+
+  const filteredCases = searchProblem.trim()
+    ? troubleshootingCases.filter(
+        (c) =>
+          c.code.toLowerCase().includes(searchProblem.toLowerCase()) ||
+          c.domain.toLowerCase().includes(searchProblem.toLowerCase()) ||
+          c.title.toLowerCase().includes(searchProblem.toLowerCase()) ||
+          c.approach.toLowerCase().includes(searchProblem.toLowerCase())
+      )
+    : troubleshootingCases;
 
   // --- Interactive Terminal State ---
   const [terminalInput, setTerminalInput] = useState("");
   const [terminalHistory, setTerminalHistory] = useState<Array<{ cmd: string; output: string | React.ReactNode }>>([
     {
       cmd: "whoami",
-      output: "Murat Kuşcu — Mechanical Engineer & Full-Stack Systems Architect. Sells elevators by day, builds autonomous agent pipelines by night.",
+      output: "Murat Kuşcu — Multidisipliner Sistem Kurucu. Teknik Düşünce + Ticari Bakış Açısı + Otomasyon + Yapay Zekâ.",
     },
     {
-      cmd: "system --status",
-      output: "🚀 BLAIN ERP & MES: ONLINE | 🤖 9x YouTube Autonomous Daemons: RUNNING | 🧠 Obsidian Knowledge Graph: SYNCED",
+      cmd: "felsefe",
+      output: '"Merak ediyorum. Öğreniyorum. Kuruyorum. Otomatize ediyorum. Çözüyorum."',
     },
     {
       cmd: "help",
-      output: "Available commands: whoami, skills, projects, quote, blain-erp, remotion, metrics, secret, clear",
+      output: "Komutlar: whoami, felsefe, stack, hidrolik, qr-stok, ai-agent, otomotiv, projeler, quote, clear",
     },
   ]);
   const terminalEndRef = useRef<HTMLDivElement>(null);
@@ -100,38 +173,44 @@ export default function Home() {
 
     switch (cleanCmd) {
       case "help":
-        response = "Available commands: whoami, skills, projects, quote, blain-erp, remotion, metrics, secret, clear";
+        response = "Mevcut komutlar: whoami, felsefe, stack, hidrolik, qr-stok, ai-agent, otomotiv, projeler, quote, contact, clear";
         break;
       case "whoami":
-        response = "Murat Kuşcu: Mechanical Engineer (Gazi / Technical) turned Full-Stack & Autonomous AI Systems Architect. Bridge between heavy physical engineering and cutting-edge software.";
+        response = "Murat Kuşcu: Tek bir kutuya sığmayan, sahada hidrolik asansör hesaplayan, ticari teklif/stok süreçlerini yöneten, Linux sunucularında AI agent'ları orkestre eden sistem kurucu.";
+        break;
+      case "felsefe":
+        response = "Teknoloji benim için gösteriş değildir. 'Bu teknoloji benim gerçek hayattaki bir problemimi çözebilir mi?' sorusuyla yola çıkarım.";
         break;
       case "quote":
         response = '"I sell elevators by day, write code by night. I\'m actually a Mechanical Engineer, but please don\'t tell the IT department I built this."';
         break;
-      case "skills":
-        response = "Next.js 16, React 19, TypeScript, Python, Supabase/PostgreSQL, Remotion, Gemini Voice, Docker, Linux, EN 81-20 Hydraulic Lift Design, Statistical Inventory Modeling (ROP).";
+      case "stack":
+        response = "Next.js, TypeScript, Supabase, PostgreSQL, Docker, Linux, Portainer, Python, Remotion, Gemini Voice, APIs, Excel/Access, EN 81-20.";
         break;
-      case "projects":
-        response = "1. BLAIN ERP & MES (Blaincalc HUB)\n2. Autonomous Media & Video Engine (9 Channels)\n3. OmniRoute Multi-Model AI Gateway\n4. Stickman Studio\n5. Quantitative ROP & Demand Forecast Engine";
+      case "hidrolik":
+        response = "Hidrolik Valfler, Silindirler, Güç Üniteleri, Pompalar, Debi & Basınç Hesapları, 2:1 Askı Oranları, Burkulma, Motor Gücü Seçimleri.";
         break;
-      case "blain-erp":
-        response = "BLAIN ERP & MES: Comprehensive engineering calculations (piston, pump, motor, valve, scissor lift) + Complete ERP lifecycle (Shopfloor QR, Inventory, Purchases, Accounting). Built with Next.js 16 + Supabase.";
+      case "qr-stok":
+        response = "Depoda ürünlerin QR kodları üzerinden personelin telefonuyla okutulması ve stok hareketlerinin otomatik dijitalleştirilmesi.";
         break;
-      case "remotion":
-        response = "9 Channels running on PM2. 24fps kinematic rendering, Gemini 2.5 Flash Voice, milisecond karaoke subtitles, EBU R128 audio mastering. 100% automated.";
+      case "ai-agent":
+        response = "Hermes Agent, OmniRoute AI Router, OpenAI uyumlu yerel/uzak endpoint'ler, hata toleranslı model sağlayıcı entegrasyonu.";
         break;
-      case "metrics":
-        response = "⚡ 9 Autonomous Channels | 🔄 100% Zero-Touch Pipeline | 🏗️ 20+ Industrial ERP Modules | 💰 $0 Zero-Cost Architecture";
+      case "otomotiv":
+        response = "OBD arıza teşhisi (P0420, P22FB), NOx sensörleri, DPF, ECU parametreleri, ELM327 ile canlı veri okuma ve analitik problem çözme.";
         break;
-      case "secret":
-        response = "🔥 Easter Egg: F_acting = 1.4 * g * ((M_car + Q) * ratio + M_ram). Never use hardcoded safety multipliers; compute real statistical volatility!";
+      case "projeler":
+        response = "1. Hidrolik Asansör Teklif & Hesaplama Sistemi\n2. QR Kod & Mobil Stok Otomasyonu\n3. AI Agent & OmniRoute Altyapısı\n4. Linux & Docker Sunucu Mimarisi\n5. Modern Web Portalları (Next.js/Supabase)\n6. Otonom AI Video & Medya Motoru\n7. Otomotiv & Sistem Troubleshooting";
+        break;
+      case "contact":
+        response = "E-posta: kscmrt@gmail.com | GitHub: https://github.com/kscmrt";
         break;
       case "clear":
         setTerminalHistory([]);
         setTerminalInput("");
         return;
       default:
-        response = `Command not recognized: "${cleanCmd}". Type "help" for a list of valid commands.`;
+        response = `Bilinmeyen komut: "${cleanCmd}". Komut listesi için "help" yazabilirsiniz.`;
     }
 
     setTerminalHistory((prev) => [...prev, { cmd: terminalInput, output: response }]);
@@ -149,111 +228,114 @@ export default function Home() {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const projectsData = [
+  // --- Real-World Case Study Projects ---
+  const projects = [
     {
-      id: "blain-erp",
-      title: "BLAIN ERP & MES Portal (Blaincalc HUB)",
-      subtitle: "Endüstriyel Mühendislik Hesaplama, Üretim Takip ve ERP Sistemi",
+      id: "hydraulic-portal",
+      title: "Hidrolik Asansör Teklif, Hesaplama ve ERP Sistemi",
       category: "engineering",
-      badge: "Production / Kurumsal",
-      gradient: "from-blue-600/30 via-indigo-600/20 to-cyan-600/20",
-      description:
-        "Blain Hydraulics ve hidrolik asansör sektörü için geliştirilmiş uçtan uca mühendislik hesaplama ve MES/ERP platformu. EN 81-20 standartlarında silindir, pompa, motor, valf ve makas lifti mühendislik hesaplamalarından atölye QR üretim takibine, dinamik stok rezervasyonundan çok para birimli muhasebeye kadar 20+ kritik modülü tek çatı altında toplar.",
-      metrics: "20+ Entegre Modül | Gerçek Zamanlı Supabase DB | QR Mobil Üretim",
-      tags: ["Next.js 16", "React 19", "TypeScript", "Supabase", "PostgreSQL", "Tailwind CSS v4", "jsPDF", "Recharts"],
-      highlights: [
-        "Mühendislik Hesaplama Motoru: Silindir, tandem piston, pompa debisi, motor gücü ve valf basınç kayıplarının anlık deterministik hesabı.",
-        "Üretim & MES Yönetimi: Her imalat siparişi için dinamik QR kodlu mobil iş takip ekranı ve fotoğraf/not arşivi.",
-        "Dinamik Satın Alma & Stok Rezervasyonu: Yoldaki transit stoklar, kritik emniyet seviyeleri ve projeye özel tahsis mekanizması.",
-        "Rol Tabanlı Güvenlik (RBAC): Admin, Mühendis, İmalatçı, Muhasebe, Depo ve Müşteri panelleri için sayfa ve aksiyon bazlı granular yetkilendirme.",
-      ],
+      tagline: "Mühendislik hesaplarından ticari teklife ve üretime uçtan uca otomasyon",
+      problem:
+        "Hidrolik asansör sektöründe her müşteri projesi için kabin ağırlığı, askı oranı, seyir hızı, silindir çapı, debi, motor gücü, valf basınç kaybı, döviz kurları ve KDV hesaplarının manuel yapılması hem çok ciddi zaman alıyor hem de insan hatasına açık oluyordu.",
+      approach:
+        "İlk olarak Microsoft Access ve Excel ile dinamik formüller geliştirdim; ardından bunu Next.js 16, TypeScript ve Supabase tabanlı 20+ modüllü kurumsal bir mühendislik & ERP portalına (Blaincalc HUB) dönüştürdüm.",
+      techStack: ["Next.js 16", "React 19", "TypeScript", "Supabase (PostgreSQL)", "Tailwind CSS v4", "jsPDF", "Access/Excel"],
+      solution:
+        "Mühendisin sadece temel kabin parametrelerini girmesiyle EN 81-20 standartlarına uygun piston çapı, gerekli debi, motor gücü, valf tipi, statik/dinamik basınçlar ve Euro/TL bazlı resmi proforma teklifler saniyeler içinde otomatik üretilir hale getirildi.",
+      result:
+        "Teklif hazırlama süresi saatlerden dakikalara indi, tekliften siparişe ve atölye QR üretimine kadar sıfır hesaplama hatasıyla çalışan entegre bir sistem kuruldu.",
       githubUrl: "https://github.com/kscmrt/sonproje",
     },
     {
-      id: "remotion-engine",
-      title: "Otonom YouTube Medya & Video Motoru",
-      subtitle: "Uçtan Uca Programatik Video Üretim ve Yayın Pipeline'ı",
-      category: "ai",
-      badge: "9 Aktif Kanal / 24/7",
-      gradient: "from-indigo-600/30 via-purple-600/20 to-pink-600/20",
-      description:
-        "Metin senaryosundan YouTube yayınına kadar hiçbir insan müdahalesi gerektirmeyen otonom medya üretim orkestrasyonu. Google Gemini 2.5 Flash Voice modelleriyle stüdyo kalitesinde seslendirme, Remotion React ile 24fps kinematiğinde render, milisaniyelik dinamik karaoke altyazı senkronizasyonu ve otomatik YouTube Data API v3 analitiği.",
-      metrics: "9 Aktif YouTube Kanalı | 10k+ Video | $0 Maliyetli Seslendirme Mimarisi",
-      tags: ["Remotion", "React", "Next.js", "Gemini Voice", "FFmpeg", "PM2 Daemons", "YouTube API"],
-      highlights: [
-        "Kinetic Karaoke Altyazı: TikTok/Shorts arayüzleriyle çakışmayan altın güvenli bölge (Y: %45-%70) altyazı motoru.",
-        "EBU R128 Ses Mastering: Otomatik LUFS ses normalizasyonu ve profesyonel podcast standartlarında dinamik aralık işleme.",
-        "Sentinel QA v2.0 Semantik Denetim: Jenerik veya tık tuzağı içerikleri filtreleyen yapay zekâ kalite kapısı.",
-        "Otonom PM2 Kümesi: Günlük döngüleri yöneten, hata durumunda kendini onaran (auto-healer) arka plan iş parçacıkları.",
-      ],
+      id: "qr-inventory",
+      title: "QR Kod Tabanlı Mobil Stok ve Depo Otomasyonu",
+      category: "automation",
+      tagline: "Stok hareketlerini personelin telefonundan tek okutmayla dijitalleştirme",
+      problem:
+        "Depoda ürün giriş ve çıkışlarının deftere veya sonradan bilgisayara manuel yazılması stok kayıplarına, yanlış ürün sevkiyatına ve güncel olmayan envanter verilerine yol açıyordu.",
+      approach:
+        "Masaüstü bilgisayar bağımlılığını ortadan kaldırarak her personele cep telefonunu bir el terminali gibi kullandıran hafif ve hızlı bir QR kod mimarisi kurguladım.",
+      techStack: ["QR Code Architecture", "Google Forms / Sheets API", "Webhooks", "Mobile Web App", "PostgreSQL"],
+      solution:
+        "Ürün raflarına ve koli etiketlerine dinamik QR kodlar basıldı. Depo personeli ürün giriş veya çıkışında cep telefonuyla QR kodu okuttuğunda işlem anında veritabanına rezervasyon ve stok hareketi olarak işlendi.",
+      result:
+        "Depodaki manuel kayıt iş yükü %90 azaldı, 'yoldaki stoklar' ve 'rezerve stoklar' anlık olarak satış ve mühendislik ekranlarında görünür hale geldi.",
       githubUrl: "https://github.com/kscmrt",
     },
     {
-      id: "omniroute",
-      title: "OmniRoute — Çoklu Model AI Yönlendirici & Ağ Geçidi",
-      subtitle: "Yüksek Performanslı Akıllı LLM Proxy ve Failover Katmanı",
+      id: "ai-agent-omniroute",
+      title: "Otonom AI Ajan Altyapısı & OmniRoute Gateway",
       category: "ai",
-      badge: "Açık Kaynak & Modüler",
-      gradient: "from-cyan-600/30 via-teal-600/20 to-emerald-600/20",
-      description:
-        "Tüm yapay zekâ iş yüklerini tek bir standart endpoint altında toplayan, farklı LLM sağlayıcıları (OpenAI, Anthropic, Gemini, DeepSeek) arasında akıllı rota belirleme, yük dengeleme, token sayımı ve kesintisiz SSE akışı sunan yüksek verimli proxy servisi.",
-      metrics: "Ultra Düşük Gecikme | Otomatik Hata Fallback | Token & Maliyet Optimizasyonu",
-      tags: ["TypeScript", "Node.js", "AI Gateway", "Server-Sent Events", "Multi-Provider"],
-      highlights: [
-        "Dinamik Sağlayıcı Yönlendirme: Hız, kota ve fiyat parametrelerine göre en uygun modele anlık rota.",
-        "Failover Güvencesi: Bir API çöktüğünde veya 429 döndüğünde milisaniyeler içinde alternatif modele devir.",
-        "Merkezi Token ve Maliyet Takibi: Dağıtık projelerin tüketimlerini tek bir arayüzden raporlama.",
-      ],
+      tagline: "Yapay zekâyı chatbot'tan gerçek iş yapan otonom asistana dönüştürme",
+      problem:
+        "Tek bir yapay zekâ modeline bağımlı kalmak API kesintilerine, kota aşımlarına, yüksek maliyetlere ve ajanların oturumlar arası hafıza kaybetmesine neden oluyordu.",
+      approach:
+        "Farklı model sağlayıcılarını (OpenAI, Anthropic, DeepSeek, Gemini) tek bir standart endpoint arkasında toplayan akıllı proxy (OmniRoute) ve Obsidian Vault tabanlı deterministik kalıcı hafıza mimarisi geliştirdim.",
+      techStack: ["TypeScript", "Node.js", "Hermes Agent", "Obsidian Knowledge Graph", "Docker", "SSE Streaming"],
+      solution:
+        "HTTP 401/503 gibi sağlayıcı hatalarında otomatik olarak alternatif modele geçen, token maliyetini optimize eden ve sunucu üzerinde dosya okuyup komut çalıştırabilen otonom ajan pipeline'ı inşa edildi.",
+      result:
+        "AI sistemleri sadece sohbet eden araçlar olmaktan çıkıp sunucuda kod geliştiren, log inceleyen ve otomatik iş akışlarını yürüten güvenilir asistanlara dönüştü.",
       githubUrl: "https://github.com/kscmrt/OmniRoute",
     },
     {
-      id: "agent-vault",
-      title: "Hermes Agent Kalıcı Hafıza & Obsidian Bilgi Ağı",
-      subtitle: "Otonom Ajanlar İçin Deterministik Bilgi ve Protokol Vault'u",
-      category: "system",
-      badge: "Knowledge Graph",
-      gradient: "from-emerald-600/30 via-teal-600/20 to-indigo-600/20",
-      description:
-        "Yapay zekâ ajanlarının oturum sınırlarını aşmasını sağlayan, çift yönlü senkronizasyonlu ve Markdown tabanlı kalıcı hafıza mimarisi. Mühendislik formülleri, YouTube kuralları ve sistem protokollerini deterministik olarak ajan hafızasına bağlar.",
-      metrics: "Günlük Otomatik Cron Replikasyonu | Sıfır Halüsinasyon Protokolü | Git Entegre",
-      tags: ["Obsidian", "Git Automation", "Agent Memory", "Bash Scripting", "Knowledge Graph"],
-      highlights: [
-        "Deterministik Protokoller: Ajanların ezbere tahmin yerine dosyalanmış mühendislik kurallarını okuması.",
-        "Çift Yönlü Git Senkronizasyonu: GitHub üzerinden anlık versiyonlanmış bilgi deposu.",
-        "Kalıcı İş Kuralları: Proje bazlı tüm teknik standartların güvenli arşivi.",
-      ],
-      githubUrl: "https://github.com/kscmrt/hermes-obsidian-vault",
+      id: "linux-server-infra",
+      title: "Linux Sunucu Mimarisi & Docker Konteyner Yönetimi",
+      category: "infrastructure",
+      tagline: "Hata toleranslı, düşük maliyetli ve self-hosted servis altyapısı",
+      problem:
+        "Farklı projelerin (veritabanları, API router'ları, video render iş parçacıkları) bağımlılıklarının çakışması ve sunucu kaynaklarının (CPU/RAM/Disk) plansız tüketilmesi sistem kilitlenmelerine yol açabiliyordu.",
+      approach:
+        "Ubuntu Server üzerinde Docker ve Portainer ile tüm servisleri izole konteynerler haline getirip, SSH tünelleri ve reverse proxy ile güvenli bir sunucu ekosistemi kurdum.",
+      techStack: ["Ubuntu Server", "Docker", "Portainer", "PM2 Cluster", "Systemd", "SSH Tunneling", "Bash"],
+      solution:
+        "Log analizleri ile bellek baskısı oluşturan süreçleri tespit ederek otomatik kurtarma (auto-healer) mekanizmaları, ZRAM bellek optimizasyonu ve uzaktan güvenli erişim altyapısı kurdum.",
+      result:
+        "Sıfır ek sunucu lisans maliyetiyle 7/24 kesintisiz çalışan, arka planda video render ve API yönlendirme yapan sağlam bir altyapı elde edildi.",
+      githubUrl: "https://github.com/kscmrt",
     },
     {
-      id: "industrial-rop",
-      title: "Endüstriyel Talep Tahmin & İstatistiksel ROP Motoru",
-      subtitle: "Matematiksel Emniyet Stoku ve Satın Alma Optimizasyonu",
-      category: "engineering",
-      badge: "Matematiksel Modelleme",
-      gradient: "from-amber-600/30 via-orange-600/20 to-red-600/20",
-      description:
-        "Endüstriyel üretim tesislerinde sabit çarpanlar yerine gerçek sipariş dönüşüm oranları ve talep oynaklığını (standart sapma) modelleyen, 60 günlük termin süresinde %95 servis seviyesini garanti eden analitik ROP (Reorder Point) algoritması.",
-      metrics: "%95 Hedef Servis Seviyesi | Dinamik Güvenlik Stoku | Sıfır Atıl Sermaye",
-      tags: ["Python", "Matematiksel Modelleme", "İstatistiksel Analiz", "Tedarik Zinciri", "ERP"],
-      highlights: [
-        "Volatilite Duyarlı Modelleme: Sabit katsayılar yerine talep varyansına dayalı emniyet stoku.",
-        "7 Aylık Proje Dönüşüm Matrisi: Tekliften siparişe geçiş olasılıklarının tedarik planına entegrasyonu.",
-        "Kritik Parça Uyarı Algoritması: Tedarik süresi uzun hidrolik valf ve güç üniteleri için erken sipariş tetikleyicisi.",
-      ],
+      id: "faceless-video-engine",
+      title: "Yapay Zekâ ile Otonom Video ve İçerik Pipeline'ı",
+      category: "ai",
+      tagline: "Senaryodan yayına insan müdahalesi gerektirmeyen medya otomasyonu",
+      problem:
+        "Video montajı, seslendirme, altyazı senkronizasyonu ve yayınlama süreçlerinin elle yapılması günlerce vakit alıyor ve ölçeklenemiyordu.",
+      approach:
+        "İçerik üretimini kodlanabilir bir pipeline olarak ele alarak Remotion (React tabanlı programatik video), Gemini Flash Voice ve FFmpeg ses işleme araçlarını birleştirdim.",
+      techStack: ["Remotion", "React", "Google Gemini Voice", "FFmpeg (EBU R128)", "PM2", "YouTube Data API"],
+      solution:
+        "Metin senaryosunu alıp stüdyo kalitesinde seslendiren, milisaniyelik dinamik karaoke altyazıları safe-zone içinde konumlandıran ve 24fps render alıp yayına hazırlayan tam otonom bir akış inşa edildi.",
+      result:
+        "9 farklı tematik kanalda on binden fazla video sıfır manuel iş yükü ve sıfır ek seslendirme maliyetiyle otonom olarak üretildi.",
+      githubUrl: "https://github.com/kscmrt",
+    },
+    {
+      id: "automotive-troubleshooting",
+      title: "Otomotiv OBD & Sensör Teşhis Araştırmaları",
+      category: "troubleshooting",
+      tagline: "Motor yönetim sistemleri, arıza kodları ve kök neden analizi",
+      problem:
+        "Modern araçlarda emisyon (DPF, NOx) ve motor yönetim sistemlerinde ortaya çıkan arızalarda doğrudan parça değişimine gidilmesi hem yüksek maliyet yaratıyor hem de gerçek kök nedeni çözmüyordu.",
+      approach:
+        "ELM327 OBD donanımları ve teşhis yazılımlarıyla ECU canlı sensör verilerini (hava debisi, lambda voltaj salınımları, egzoz sıcaklıkları, diferansiyel basınçlar) kayıt altına alarak matematiksel olarak inceledim.",
+      techStack: ["OBD-II Diagnostic", "ELM327", "ECU Live Data", "CAN-Bus Analizi", "Sinyal Osiloskopu"],
+      solution:
+        "P0420 ve P22FB gibi karmaşık arıza kodlarında sensör besleme voltajları, CAN-bus hat dirençleri ve gaz analiz değerleri karşılaştırılarak gereksiz parça değişiminin önüne geçildi.",
+      result:
+        "Mekanik ve elektriksel problemlerde 'önce neden çalışmadığını anlama' felsefesiyle kesin ve kalıcı teşhis yöntemi oluşturuldu.",
       githubUrl: "https://github.com/kscmrt",
     },
   ];
 
-  const currentProject = projectsData.find((p) => p.id === selectedProject) || projectsData[0];
+  const currentProject = projects.find((p) => p.id === selectedProjectId) || projects[0];
 
   const filteredProjects =
-    projectCategory === "all"
-      ? projectsData
-      : projectsData.filter((p) => p.category === projectCategory);
+    projectFilter === "all" ? projects : projects.filter((p) => p.category === projectFilter);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white relative font-sans">
-      {/* Dynamic Background Glows */}
+      {/* Background Ambience */}
       <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="fixed top-1/2 right-10 w-[450px] h-[450px] bg-cyan-600/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="fixed bottom-10 left-1/3 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
@@ -269,23 +351,24 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-slate-100 tracking-tight text-base">Murat Kuşcu</span>
                 <span className="px-2 py-0.5 rounded-md bg-indigo-500/15 border border-indigo-500/30 text-[10px] font-mono text-indigo-300">
-                  MechEng & Architect
+                  Multidisipliner Sistem Kurucu
                 </span>
               </div>
               <span className="text-[11px] text-slate-400 block font-mono">
-                Full-Stack & Autonomous AI Lead
+                Technology • Automation • AI • Engineering
               </span>
             </div>
           </div>
 
-          {/* Navigation Pill */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 text-xs font-semibold">
+          {/* Navigation Tabs */}
+          <nav className="hidden lg:flex items-center gap-1 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 text-xs font-semibold">
             {[
-              { id: "projects", label: "Projeler & Mimari", icon: <Boxes className="w-3.5 h-3.5" /> },
-              { id: "simulator", label: "Hidrolik Simülatör", icon: <Gauge className="w-3.5 h-3.5" /> },
+              { id: "journey", label: "Hikâye & Felsefe", icon: <Compass className="w-3.5 h-3.5" /> },
+              { id: "projects", label: "Gerçek Projeler", icon: <Boxes className="w-3.5 h-3.5" /> },
+              { id: "hydraulic-calc", label: "Hidrolik Simülatör", icon: <Gauge className="w-3.5 h-3.5" /> },
+              { id: "troubleshooting", label: "Problem Çözme & Arıza Teşhis", icon: <Wrench className="w-3.5 h-3.5" /> },
+              { id: "stack", label: "Teknoloji Haritası", icon: <Layers className="w-3.5 h-3.5" /> },
               { id: "terminal", label: "Canlı Konsol", icon: <TerminalIcon className="w-3.5 h-3.5" /> },
-              { id: "skills", label: "Yetenekler", icon: <Sparkles className="w-3.5 h-3.5" /> },
-              { id: "cv", label: "CV & Deneyim", icon: <Briefcase className="w-3.5 h-3.5" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -324,50 +407,65 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Hero Header */}
+      {/* Hero Section */}
       <section className="relative pt-12 pb-14 px-4 sm:px-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-8 space-y-6">
             {/* Tagline Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/80 text-xs font-mono text-slate-300 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Gündüz Hidrolik Mühendisliği • Gece Full-Stack & Otonom Ajanlar</span>
+              <span>Teknik Düşünce + Ticari Bakış Açısı + Otomasyon + Yapay Zekâ</span>
             </div>
 
-            {/* Main Header */}
-            <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-white leading-[1.1]">
-              Mühendislik Hassasiyeti ile <br />
+            {/* Main Headline */}
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.15]">
+              Gerçek dünyadaki problemleri <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-cyan-300 to-emerald-400">
-                Otonom Sistemler & Yazılım Mimarisi
-              </span>
+                teknoloji, otomasyon ve yapay zekâ
+              </span>{" "}
+              ile çözüyorum.
             </h1>
 
-            {/* Distinct Persona Quote */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/40 via-slate-900 to-slate-900 border-l-4 border-indigo-500 border-y border-r border-slate-800 text-sm text-slate-300 italic font-mono leading-relaxed">
-              &ldquo;I sell elevators by day, write code by night. I&apos;m actually a Mechanical Engineer, but please don&apos;t tell the IT department I built this.&rdquo;
+            {/* Core Manifesto Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-950/40 via-slate-900 to-slate-900 border-l-4 border-indigo-500 border-y border-r border-slate-800 text-xs sm:text-sm text-slate-300 leading-relaxed space-y-2">
+              <div className="font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-400" />
+                <span>Tek bir meslek kutusuna sığmayan yaklaşım</span>
+              </div>
+              <p>
+                Hidrolik asansör sistemlerinden modern web yazılımlarına (Next.js, Supabase), Linux sunucularından AI agent mimarilerine ve otomotiv OBD arıza teşhisine kadar farklı disiplinlerde çalışıyorum. Bir problemi gördüğümde sadece teoride bırakmam; sistemi anlar, kurar, test eder ve otomatize ederim.
+              </p>
             </div>
 
-            {/* Description Paragraph */}
-            <p className="text-base sm:text-lg text-slate-300 font-light leading-relaxed max-w-2xl">
-              Fiziksel mühendislik standartlarını (<span className="text-white font-medium">EN 81-20, Hidrolik Güç, İstatistiksel ROP</span>) modern web teknolojileri (<span className="text-white font-medium">Next.js 16, Supabase, React 19, TypeScript</span>) ve 24/7 çalışan <span className="text-indigo-400 font-medium">Otonom Yapay Zekâ Pipeline</span>&apos;ları ile birleştiren sistem mimarı.
-            </p>
+            {/* Philosophical Motto */}
+            <div className="text-xs font-mono text-indigo-300 tracking-wide font-semibold">
+              &ldquo;Merak ediyorum. Öğreniyorum. Kuruyorum. Otomatize ediyorum. Çözüyorum.&rdquo;
+            </div>
 
-            {/* Action Buttons */}
+            {/* Action CTAs */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={() => setActiveTab("projects")}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 flex items-center gap-2 transition-all hover:scale-105"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-xs sm:text-sm shadow-xl shadow-indigo-600/30 flex items-center gap-2 transition-all hover:scale-105"
               >
                 <Boxes className="w-4 h-4" />
-                Projeleri İncele
+                Gerçek Projeleri İncele
               </button>
 
               <button
-                onClick={() => setActiveTab("simulator")}
-                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-semibold text-sm flex items-center gap-2 transition-all hover:scale-105"
+                onClick={() => setActiveTab("hydraulic-calc")}
+                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-semibold text-xs sm:text-sm flex items-center gap-2 transition-all hover:scale-105"
               >
                 <Calculator className="w-4 h-4 text-cyan-400" />
-                Hidrolik Simülatörü Dene
+                Hidrolik Simülatörü Aç
+              </button>
+
+              <button
+                onClick={() => setActiveTab("troubleshooting")}
+                className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold text-xs sm:text-sm flex items-center gap-2 transition-all"
+              >
+                <Wrench className="w-4 h-4 text-amber-400" />
+                Arıza Teşhis & Vakalar
               </button>
 
               <button
@@ -389,58 +487,60 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Interactive Quick Metrics Card */}
+          {/* Multidisciplinary Synergy Pillars */}
           <div className="lg:col-span-4 bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-2xl relative overflow-hidden backdrop-blur-md">
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl" />
-            
+
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-mono font-bold text-slate-200">SİSTEM METRİKLERİ</span>
-              </div>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                100% CANLI
+              <span className="text-xs font-mono font-bold text-slate-200 flex items-center gap-2">
+                <Workflow className="w-4 h-4 text-indigo-400" />
+                UZMANLIK KESİŞİM MATRİSİ
+              </span>
+              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                Entegre
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-slate-950/70 border border-slate-800/80 p-3.5 rounded-2xl">
-                <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 font-mono">
-                  20+
+            <div className="space-y-2.5 text-xs">
+              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 flex items-start gap-3">
+                <Gauge className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-slate-200">Hidrolik & Mekanik Mühendislik</div>
+                  <div className="text-[11px] text-slate-400">Silindir, pompa, motor, valf ve debi/basınç hesapları</div>
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5 font-medium">ERP & MES Modülü</div>
               </div>
 
-              <div className="bg-slate-950/70 border border-slate-800/80 p-3.5 rounded-2xl">
-                <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 font-mono">
-                  9 Kanal
+              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 flex items-start gap-3">
+                <DollarSign className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-slate-200">Ticari Operasyon & Satış</div>
+                  <div className="text-[11px] text-slate-400">Teklif, proforma, döviz kurları, KDV, stok & tedarik</div>
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Otonom YouTube Ajanı</div>
               </div>
 
-              <div className="bg-slate-950/70 border border-slate-800/80 p-3.5 rounded-2xl">
-                <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 font-mono">
-                  10k+
+              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 flex items-start gap-3">
+                <Code2 className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-slate-200">Yazılım & Modern Web</div>
+                  <div className="text-[11px] text-slate-400">Next.js 16, TypeScript, Supabase, APIs, Vercel</div>
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Otomatik Üretilen Video</div>
               </div>
 
-              <div className="bg-slate-950/70 border border-slate-800/80 p-3.5 rounded-2xl">
-                <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400 font-mono">
-                  0₺
+              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 flex items-start gap-3">
+                <Bot className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-slate-200">Yapay Zekâ & Otonom Ajanlar</div>
+                  <div className="text-[11px] text-slate-400">Hermes Agent, OmniRoute AI Router, Gemini Voice</div>
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Maliyet Odaklı Tasarım</div>
               </div>
-            </div>
 
-            {/* Real System Stack Pill */}
-            <div className="bg-slate-950/90 border border-slate-800 p-3 rounded-2xl text-[11px] font-mono text-slate-400 space-y-1">
-              <div className="text-slate-300 font-semibold flex items-center justify-between">
-                <span>Mimari Çekirdeği:</span>
-                <span className="text-indigo-400">Next.js 16 + Supabase</span>
+              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 flex items-start gap-3">
+                <Server className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-slate-200">Linux, Docker & Sunucu</div>
+                  <div className="text-[11px] text-slate-400">Ubuntu Server, Portainer, Reverse Proxy, SSH Tunnels</div>
+                </div>
               </div>
-              <div>• Dağıtık PM2 Otonom Daemonları</div>
-              <div>• EN 81-20 Deterministik Hesaplama Motoru</div>
             </div>
           </div>
         </div>
@@ -452,11 +552,12 @@ export default function Home() {
         <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-8 overflow-x-auto gap-4">
           <div className="flex items-center gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800 shrink-0">
             {[
-              { id: "projects", label: "Projeler & Sistem Mimarisi", icon: <Boxes className="w-4 h-4" /> },
-              { id: "simulator", label: "İnteraktif Hidrolik Hesaplama", icon: <Calculator className="w-4 h-4" /> },
-              { id: "terminal", label: "İnteraktif Terminal & CLI", icon: <TerminalIcon className="w-4 h-4" /> },
-              { id: "skills", label: "Teknoloji Matrisi", icon: <Sparkles className="w-4 h-4" /> },
-              { id: "cv", label: "Detaylı CV & Deneyim", icon: <Briefcase className="w-4 h-4" /> },
+              { id: "journey", label: "Hikâye & Felsefe", icon: <Compass className="w-4 h-4" /> },
+              { id: "projects", label: "Gerçek Projeler & Vaka Analizleri", icon: <Boxes className="w-4 h-4" /> },
+              { id: "hydraulic-calc", label: "Hidrolik Hesaplama Motoru", icon: <Gauge className="w-4 h-4" /> },
+              { id: "troubleshooting", label: "Problem Çözme & Arıza Teşhis", icon: <Wrench className="w-4 h-4" /> },
+              { id: "stack", label: "Teknoloji Haritası", icon: <Layers className="w-4 h-4" /> },
+              { id: "terminal", label: "İnteraktif CLI", icon: <TerminalIcon className="w-4 h-4" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -475,18 +576,20 @@ export default function Home() {
 
           {activeTab === "projects" && (
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs text-slate-500 font-medium">Kategori:</span>
+              <span className="text-xs text-slate-500 font-medium">Filtre:</span>
               {[
                 { id: "all", label: "Tümü" },
                 { id: "engineering", label: "Mühendislik & ERP" },
-                { id: "ai", label: "Yapay Zekâ & Medya" },
-                { id: "system", label: "Sistem & Altyapı" },
+                { id: "automation", label: "Otomasyon & Stok" },
+                { id: "ai", label: "AI & Medya" },
+                { id: "infrastructure", label: "Sunucu & Altyapı" },
+                { id: "troubleshooting", label: "Arıza & Teşhis" },
               ].map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setProjectCategory(cat.id)}
+                  onClick={() => setProjectFilter(cat.id)}
                   className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    projectCategory === cat.id
+                    projectFilter === cat.id
                       ? "bg-slate-800 text-indigo-400 border border-indigo-500/30"
                       : "text-slate-400 hover:text-slate-200"
                   }`}
@@ -498,54 +601,174 @@ export default function Home() {
           )}
         </div>
 
-        {/* TAB 1: PROJECTS & ARCHITECTURE */}
+        {/* TAB 1: STORY & PHILOSOPHY */}
+        {activeTab === "journey" && (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Left Column: The Narrative */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-5">
+                  <div className="flex items-center gap-2 text-indigo-400 text-xs font-mono font-bold">
+                    <Compass className="w-4 h-4" />
+                    <span>BİR BAŞLANGIÇTAN DEVAM EDEN TEKNOLOJİ YOLCULUĞUNA</span>
+                  </div>
+
+                  <h2 className="text-2xl sm:text-3xl font-black text-white leading-snug">
+                    Sadece teknoloji kullanmıyorum; onu gerçek dünya problemlerine uyguluyorum.
+                  </h2>
+
+                  <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                    <p>
+                      Teknik bir sektörde, hidrolik asansör sistemlerinin içinde çalışarak başladım. Hidrolik valfler, silindirler, güç üniteleri, pompalar ve motorların fiziksel dünyadaki çalışma prensiplerini doğrudan sahada öğrendim. Müşterinin talebini teknik olarak analiz edip debi, basınç ve motor gücünü hesaplamak günlük işimin bir parçasıydı.
+                    </p>
+                    <p>
+                      Aynı zamanda işin ticari operasyonlarını da yürüttüm; teklif hazırlama, döviz kurları, KDV hesaplamaları, müşteri bakiyeleri ve stok tedariği gibi süreçlerin içinde bulundum.
+                    </p>
+                    <p>
+                      Süreçlerdeki tekrarlayan manuel işleri gördükçe her zaman şu soruyu sordum:
+                      <strong className="text-white block font-mono mt-1 p-2 bg-slate-950 rounded-lg border border-slate-800">
+                        &ldquo;Bir iş sürekli tekrar ediliyorsa, bunu neden insan yapıyor? Yazılımla veya otomasyonla çözülebilir mi?&rdquo;
+                      </strong>
+                    </p>
+                    <p>
+                      Önce Excel ve Microsoft Access ile dinamik teklif ve hesaplama sistemleri kurdum. Ardından modern web teknolojilerine (Next.js, Supabase, TypeScript), Linux sunucularına, Docker konteynerlerine ve nihayetinde otonom yapay zekâ ajanlarına (AI Agents, OmniRoute) yöneldim.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Problem Solving Framework */}
+                <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 space-y-4">
+                  <h3 className="text-sm font-bold font-mono text-cyan-400 flex items-center gap-2">
+                    <Workflow className="w-4 h-4" />
+                    PROBLEM ÇÖZME METODOLOJİM
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-center text-xs font-mono">
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                      <div className="text-indigo-400 font-bold">1. Parçala</div>
+                      <div className="text-[10px] text-slate-400 mt-1">Problemi köklerine ayır</div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                      <div className="text-cyan-400 font-bold">2. Anla</div>
+                      <div className="text-[10px] text-slate-400 mt-1">Sistemi ve fiziğini çöz</div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                      <div className="text-emerald-400 font-bold">3. Veri Topla</div>
+                      <div className="text-[10px] text-slate-400 mt-1">Sensör, log, katalog</div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                      <div className="text-amber-400 font-bold">4. Test Et</div>
+                      <div className="text-[10px] text-slate-400 mt-1">Çözümü doğrula</div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                      <div className="text-purple-400 font-bold">5. Kur & Otomatize Et</div>
+                      <div className="text-[10px] text-slate-400 mt-1">Kalıcı sistem yap</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Character Traits & Practical Mindset */}
+              <div className="lg:col-span-5 space-y-6">
+                <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-7 space-y-4">
+                  <h3 className="text-sm font-bold font-mono text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-3">
+                    <Award className="w-4 h-4 text-emerald-400" />
+                    TEMEL ÇALIŞMA KARAKTERİ
+                  </h3>
+
+                  <div className="space-y-3 text-xs">
+                    {[
+                      {
+                        title: "Teknik Merak & Kurcalama",
+                        desc: "Bir şey hazır gelse bile arkasında nasıl çalıştığını, mimarisini ve nasıl geliştirilebileceğini incelerim.",
+                      },
+                      {
+                        title: "Pratik ve Uygulama Odaklı",
+                        desc: "Yalnızca teoride kalmam; sahada çalışan, test edilmiş, gerçek fayda üreten sistemleri önemserim.",
+                      },
+                      {
+                        title: "Kök Neden Araştırmacısı",
+                        desc: "Bir otomobil arıza kodu da olsa, çöken bir Linux servisi veya 503 veren API da olsa nedenini loglardan bulurum.",
+                      },
+                      {
+                        title: "Sıfır Gösteriş, Maksimum Sonuç",
+                        desc: "Popüler olduğu için değil, gerçek bir problemi çözdüğü için teknoloji seçerim.",
+                      },
+                      {
+                        title: "Ticari & Teknik Bütünlük",
+                        desc: "Ürünün teknik mühendisliği kadar fiyatlandırmasını, teklifini, stok ve teslimat lojistiğini de yönetebilirim.",
+                      },
+                    ].map((trait, idx) => (
+                      <div key={idx} className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+                        <div className="font-bold text-white flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" />
+                          <span>{trait.title}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 pl-5 leading-relaxed">{trait.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Live Signature Block */}
+                <div className="bg-gradient-to-br from-indigo-950/50 to-slate-900 border border-indigo-500/30 rounded-3xl p-6 text-center space-y-3">
+                  <div className="text-xs font-mono text-indigo-300">PORTFOLYO SİTESİNİN MESAJI</div>
+                  <div className="text-lg font-black text-white">
+                    &ldquo;Teknik bilgi ile gerçek dünya problemleri arasında köprü kuruyorum.&rdquo;
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Sürekli yeni teknolojiler öğreniyor, yeni otomasyonlar geliştiriyor ve mevcut iş süreçlerini daha verimli hale getiriyorum.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: PROJECTS & DETAILED CASE STUDIES */}
         {activeTab === "projects" && (
           <div className="space-y-8">
+            {/* Grid of Project Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProjects.map((project) => (
+              {filteredProjects.map((p) => (
                 <div
-                  key={project.id}
-                  onClick={() => setSelectedProject(project.id)}
-                  className={`cursor-pointer group relative bg-slate-900/70 border rounded-3xl p-6 sm:p-7 flex flex-col justify-between transition-all hover:scale-[1.01] hover:shadow-2xl ${
-                    selectedProject === project.id
+                  key={p.id}
+                  onClick={() => setSelectedProjectId(p.id)}
+                  className={`cursor-pointer group relative bg-slate-900/70 border rounded-3xl p-6 flex flex-col justify-between transition-all hover:scale-[1.01] hover:shadow-2xl ${
+                    selectedProjectId === p.id
                       ? "border-indigo-500 bg-slate-900 ring-2 ring-indigo-500/20 shadow-indigo-500/10"
                       : "border-slate-800/90 hover:border-slate-700"
                   }`}
                 >
-                  <div className="space-y-3.5">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="px-3 py-1 rounded-full bg-slate-800 text-[11px] font-mono font-semibold text-indigo-300 border border-slate-700/60">
-                        {project.badge}
+                      <span className="px-3 py-1 rounded-full bg-slate-800 text-[11px] font-mono font-semibold text-indigo-300 border border-slate-700/60 capitalize">
+                        {p.category}
                       </span>
                       <span className="text-xs font-mono text-slate-500 group-hover:text-slate-300 flex items-center gap-1">
-                        Detay <ArrowRight className="w-3.5 h-3.5" />
+                        İncele <ArrowRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
 
-                    <h3 className="text-xl font-bold text-white group-hover:text-indigo-300 transition-colors">
-                      {project.title}
+                    <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
+                      {p.title}
                     </h3>
-                    <p className="text-xs font-medium text-slate-400">{project.subtitle}</p>
+                    <p className="text-xs text-slate-400 font-medium">{p.tagline}</p>
 
-                    <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
-                      {project.description}
-                    </p>
-
-                    <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 text-[11px] font-mono text-cyan-300 flex items-center gap-2">
-                      <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span>{project.metrics}</span>
+                    <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 text-[11px] text-slate-300 space-y-1">
+                      <div className="text-indigo-400 font-bold font-mono">PROBLEM:</div>
+                      <p className="line-clamp-2">{p.problem}</p>
                     </div>
                   </div>
 
                   <div className="pt-4 mt-4 border-t border-slate-800/80 flex flex-wrap gap-1.5">
-                    {project.tags.slice(0, 4).map((t, idx) => (
+                    {p.techStack.slice(0, 3).map((t, idx) => (
                       <span key={idx} className="px-2 py-0.5 rounded-md bg-slate-800/60 text-[10px] font-mono text-slate-300">
                         {t}
                       </span>
                     ))}
-                    {project.tags.length > 4 && (
+                    {p.techStack.length > 3 && (
                       <span className="px-1.5 py-0.5 text-[10px] font-mono text-slate-500">
-                        +{project.tags.length - 4}
+                        +{p.techStack.length - 3}
                       </span>
                     )}
                   </div>
@@ -553,22 +776,19 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Selected Project Deep-Dive Inspection Panel */}
+            {/* Selected Project Full Problem-to-Solution Deep Dive */}
             <div className="bg-slate-900/90 border border-indigo-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
               <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800 pb-6">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-mono font-bold">
-                      PROJE DERİNLEMESİNE İNCELEME
+                      VAKA ANALİZİ (CASE STUDY)
                     </span>
-                    <span className="text-xs text-slate-400 font-mono">• {currentProject.badge}</span>
+                    <span className="text-xs text-slate-400 font-mono">• {currentProject.tagline}</span>
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-black text-white mt-2">
                     {currentProject.title}
                   </h2>
-                  <p className="text-sm text-slate-300 mt-1 max-w-3xl">
-                    {currentProject.description}
-                  </p>
                 </div>
 
                 <a
@@ -583,59 +803,64 @@ export default function Home() {
                 </a>
               </div>
 
-              {/* Highlights & Engineering Details */}
+              {/* Problem -> Approach -> Solution -> Result Matrix */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <h4 className="text-sm font-bold font-mono text-indigo-400 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" />
-                    TEMEL MİMARİ & ÖZELLİKLER
-                  </h4>
-                  <div className="space-y-2">
-                    {currentProject.highlights.map((h, i) => (
-                      <div key={i} className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs text-slate-300 leading-relaxed flex items-start gap-2.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
-                        <span>{h}</span>
-                      </div>
-                    ))}
+                <div className="p-5 rounded-2xl bg-slate-950/70 border border-red-500/20 space-y-2">
+                  <div className="text-xs font-mono font-bold text-red-400 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    1. KARŞILAŞILAN GERÇEK PROBLEM
                   </div>
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{currentProject.problem}</p>
                 </div>
 
-                <div className="space-y-3">
-                  <h4 className="text-sm font-bold font-mono text-cyan-400 flex items-center gap-2">
+                <div className="p-5 rounded-2xl bg-slate-950/70 border border-amber-500/20 space-y-2">
+                  <div className="text-xs font-mono font-bold text-amber-400 flex items-center gap-2">
+                    <Compass className="w-4 h-4" />
+                    2. İZLENEN YAKLAŞIM & METODOLOJİ
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{currentProject.approach}</p>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-slate-950/70 border border-indigo-500/20 space-y-2">
+                  <div className="text-xs font-mono font-bold text-indigo-400 flex items-center gap-2">
                     <Workflow className="w-4 h-4" />
-                    KULLANILAN TEKNOLOJİ YIĞINI
-                  </h4>
-                  <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                      {currentProject.tags.map((tag, idx) => (
-                        <span
-                          key={idx}
-                          className="px-3 py-1 rounded-lg bg-indigo-950/50 border border-indigo-500/30 text-xs font-mono text-indigo-200"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-800/80 text-xs text-slate-400 space-y-2">
-                      <div className="flex items-center justify-between font-mono">
-                        <span>Performans ve Dağıtım:</span>
-                        <span className="text-emerald-400 font-bold">Vercel & PM2 Daemon</span>
-                      </div>
-                      <div className="flex items-center justify-between font-mono">
-                        <span>Veri Güvenliği & State:</span>
-                        <span className="text-cyan-400 font-bold">Supabase PostgreSQL + RLS</span>
-                      </div>
-                    </div>
+                    3. GELİŞTİRİLEN SİSTEM & ÇÖZÜM
                   </div>
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{currentProject.solution}</p>
                 </div>
+
+                <div className="p-5 rounded-2xl bg-slate-950/70 border border-emerald-500/20 space-y-2">
+                  <div className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    4. SOMUT SONUÇ & KAZANIM
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{currentProject.result}</p>
+                </div>
+              </div>
+
+              {/* Tech Stack Pills */}
+              <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-mono text-slate-400">Kullanılan Araçlar:</span>
+                  {currentProject.techStack.map((tech, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2.5 py-1 rounded-lg bg-indigo-950/50 border border-indigo-500/30 text-xs font-mono text-indigo-200"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+                <span className="text-xs font-mono text-slate-500">
+                  Problem Çözüldü ve Canlıya Alındı ✓
+                </span>
               </div>
             </div>
           </div>
         )}
 
-        {/* TAB 2: INTERACTIVE HYDRAULIC SIMULATOR (EN 81-20) */}
-        {activeTab === "simulator" && (
+        {/* TAB 3: INTERACTIVE HYDRAULIC SIMULATOR (EN 81-20) */}
+        {activeTab === "hydraulic-calc" && (
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-900 border border-indigo-500/30 rounded-3xl p-6 sm:p-8 space-y-3">
               <div className="flex items-center gap-2">
@@ -645,10 +870,10 @@ export default function Home() {
                 </span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-white">
-                İnteraktif Hidrolik Silindir & Basınç Simülatörü
+                İnteraktif Hidrolik Silindir, Debi & Motor Simülatörü
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
-                Aşağıdaki parametreleri dinamik olarak değiştirerek EN 81-20 standardına göre etki eden kuvveti ($F_{'{acting}'} = 1.4 \cdot g \cdot ((M_{'{car}'} + Q) \cdot \text{ratio} + M_{'{ram}'})$), gerekli silindir kesit alanını ve statik/dinamik çalışma basınçlarını canlı olarak hesaplayabilirsiniz.
+                Hidrolik asansör projelerinde kullandığım hesaplama mantığı: Parametreleri değiştirerek dinamik etkiyen kuvveti ($F_{'{acting}'} = 1.4 \cdot g \cdot ((M_{'{car}'} + Q) \cdot \text{ratio} + M_{'{ram}'})$), gerekli silindir debisini ($Q_{'{lpm}'}$) ve tahmini motor gücünü ($kW$) anlık hesaplayın.
               </p>
             </div>
 
@@ -657,7 +882,7 @@ export default function Home() {
               <div className="lg:col-span-6 bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-5">
                 <h4 className="text-sm font-bold font-mono text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-3">
                   <Sliders className="w-4 h-4 text-indigo-400" />
-                  SİSTEM GİRİŞ PARAMETRELERİ
+                  MÜHENDİSLİK GİRİŞ PARAMETRELERİ
                 </h4>
 
                 {/* Car Weight Slider */}
@@ -728,6 +953,23 @@ export default function Home() {
                   />
                 </div>
 
+                {/* Speed Slider */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-slate-300">Kabin Seyir Hızı ($v$):</span>
+                    <span className="text-purple-400 font-bold">{speed.toFixed(2)} m/s</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="1.0"
+                    step="0.05"
+                    value={speed}
+                    onChange={(e) => setSpeed(Number(e.target.value))}
+                    className="w-full accent-purple-500 bg-slate-800 h-2 rounded-lg cursor-pointer"
+                  />
+                </div>
+
                 {/* Ratio Toggle */}
                 <div className="space-y-2 pt-2">
                   <span className="text-xs font-mono text-slate-300 block">Askı Tipi (Palanga Oranı):</span>
@@ -761,7 +1003,7 @@ export default function Home() {
                 <div>
                   <h4 className="text-sm font-bold font-mono text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-3">
                     <Gauge className="w-4 h-4 text-emerald-400" />
-                    HESAPLANAN MÜHENDİSLİK ÇIKTILARI
+                    HESAPLANAN TEKNİK ÇIKTILAR
                   </h4>
 
                   <div className="grid grid-cols-2 gap-3 pt-4">
@@ -774,27 +1016,27 @@ export default function Home() {
                     </div>
 
                     <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800">
-                      <div className="text-xs font-mono text-slate-400">Piston Kesit Alanı ($A$)</div>
+                      <div className="text-xs font-mono text-slate-400">Gerekli Pompa Debisi ($Q$)</div>
                       <div className="text-2xl font-black font-mono text-cyan-400 mt-1">
-                        {pistonArea.toFixed(1)} cm²
+                        {requiredFlowLpm.toFixed(1)} l/dak
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">Ø {pistonDiameter} mm için</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Piston hızına göre</div>
                     </div>
 
                     <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800">
-                      <div className="text-xs font-mono text-slate-400">Statik Basınç (Dolu)</div>
+                      <div className="text-xs font-mono text-slate-400">Statik / Dinamik Basınç</div>
                       <div className="text-2xl font-black font-mono text-emerald-400 mt-1">
-                        {staticPressureBar.toFixed(1)} bar
+                        {staticPressureBar.toFixed(1)} / {dynamicPressureBar.toFixed(1)} bar
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">Maksimum statik yük</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Dolu yükte valf çalışma aralığı</div>
                     </div>
 
                     <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800">
-                      <div className="text-xs font-mono text-slate-400">Dinamik Pik Basınç</div>
+                      <div className="text-xs font-mono text-slate-400">Tahmini Motor Gücü</div>
                       <div className="text-2xl font-black font-mono text-amber-400 mt-1">
-                        {dynamicPressureBar.toFixed(1)} bar
+                        {estimatedMotorKw.toFixed(1)} kW
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">İvmelenme & valf emniyeti</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Elektrik motoru seçimi</div>
                     </div>
                   </div>
                 </div>
@@ -802,10 +1044,10 @@ export default function Home() {
                 <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 text-xs font-mono text-slate-400 space-y-1">
                   <div className="text-slate-200 font-bold flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>BLAIN ERP Formülü ile Doğrulandı</span>
+                    <span>Mühendislik + Yazılım Entegrasyonu</span>
                   </div>
                   <p className="text-[11px] text-slate-400 leading-normal">
-                    Bu formül kümesi BLAIN ERP & MES (Blaincalc HUB) platformunda binlerce asansör projesinin imalat ve fiyatlandırma hesaplarında aktif olarak kullanılmaktadır.
+                    Bu formüller, geliştirdiğim BLAIN ERP & MES sisteminde sipariş anında otomatik teklif çıkarma, malzeme listesi (BOM) oluşturma ve burkulma (Euler) hesaplarında doğrudan kullanılmaktadır.
                   </p>
                 </div>
               </div>
@@ -813,7 +1055,177 @@ export default function Home() {
           </div>
         )}
 
-        {/* TAB 3: INTERACTIVE TERMINAL & CLI */}
+        {/* TAB 4: TROUBLESHOOTING & PROBLEM SOLVING CASES */}
+        {activeTab === "troubleshooting" && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/30 rounded-3xl p-6 sm:p-8 space-y-3">
+              <div className="flex items-center gap-2">
+                <Wrench className="w-5 h-5 text-amber-400" />
+                <span className="text-xs font-mono font-bold text-amber-300">
+                  GERÇEK DÜNYA TEŞHİS & TROUBLESHOOTING GÜNLÜĞÜ
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-white">
+                &ldquo;Bir şey çalışmıyorsa önce neden çalışmadığını anlamak isterim.&rdquo;
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
+                İster bir otomobilin NOx sensörü arıza kodu (P22FB) olsun, ister Linux sunucusundaki OOM çökmesi veya AI API'lerindeki HTTP 401/503 hatası olsun; hazır reçeteler yerine kök nedene inerek çözdüğüm gerçek vakalar:
+              </p>
+
+              {/* Search filter input */}
+              <div className="pt-2 max-w-md">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    value={searchProblem}
+                    onChange={(e) => setSearchProblem(e.target.value)}
+                    placeholder="Vaka veya hata ara (örn: P0420, 503, RAM, OBD...)"
+                    className="w-full bg-slate-950/90 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs font-mono text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Case list */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredCases.map((item, idx) => (
+                <div key={idx} className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-4 hover:border-slate-700 transition-colors">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono font-bold">
+                      {item.code}
+                    </span>
+                    <span className="text-[11px] font-mono text-slate-400">{item.domain}</span>
+                  </div>
+
+                  <h3 className="text-base font-bold text-white">{item.title}</h3>
+
+                  <div className="space-y-2 text-xs">
+                    <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+                      <span className="text-red-400 font-bold font-mono">Belirti / Semptom:</span>
+                      <p className="text-slate-300">{item.symptom}</p>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+                      <span className="text-cyan-400 font-bold font-mono">Teşhis & Analiz Yaklaşımı:</span>
+                      <p className="text-slate-300 leading-relaxed">{item.approach}</p>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-slate-950/70 border border-emerald-500/20 space-y-1">
+                      <span className="text-emerald-400 font-bold font-mono">Kök Neden Çözümü:</span>
+                      <p className="text-slate-300 leading-relaxed">{item.solution}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: TECH STACK & CAPABILITIES MAP */}
+        {activeTab === "stack" && (
+          <div className="space-y-6">
+            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-3">
+              <div className="flex items-center gap-2">
+                <Layers className="w-5 h-5 text-indigo-400" />
+                <span className="text-xs font-mono font-bold text-indigo-300">
+                  TEKNOLOJİ YAKLAŞIMI: KULLANDIM • ARAŞTIRDIM • GELİŞTİRDİM • UYGULADIM
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-white">
+                Sistem ve Teknoloji Envanteri
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
+                Teknolojileri abartılı unvanlarla sıralamak yerine, gerçek hayatta hangi problemleri çözmek için araştırdığımı ve uyguladığımı paylaşıyorum:
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  title: "Frontend & Web Geliştirme",
+                  icon: <Code2 className="w-5 h-5 text-indigo-400" />,
+                  items: [
+                    { name: "Next.js (App Router)", context: "Kurumsal ERP & portfolyo portalları" },
+                    { name: "React 19 & TypeScript", context: "Tip güvenli modüler kullanıcı arayüzleri" },
+                    { name: "Tailwind CSS v4", context: "Hızlı, hafif ve modern arayüz tasarımı" },
+                    { name: "Vite & Modern JS", context: "Hızlı prototipleme ve istemci araçları" },
+                  ],
+                },
+                {
+                  title: "Backend, Veri & Depolama",
+                  icon: <Database className="w-5 h-5 text-cyan-400" />,
+                  items: [
+                    { name: "Supabase (PostgreSQL)", context: "Auth, RLS veri güvenliği, Realtime ve Storage" },
+                    { name: "RESTful & WebSocket APIs", context: "Servisler arası gerçek zamanlı veri akışı" },
+                    { name: "Firebase & Cloudflare R2", context: "Statik medya ve bulut depolama" },
+                    { name: "Excel & MS Access", context: "İş süreçleri ve teklif tablolarının otomasyonu" },
+                  ],
+                },
+                {
+                  title: "Yapay Zekâ & Ajan Mimarisi",
+                  icon: <Bot className="w-5 h-5 text-purple-400" />,
+                  items: [
+                    { name: "AI Agents (Hermes Agent)", context: "Sunucuda gerçek iş ve dosya yöneten otonom ajanlar" },
+                    { name: "OmniRoute & Model Routing", context: "OpenAI uyumlu API'ler ve akıllı failover gateway" },
+                    { name: "Obsidian Knowledge Graph", context: "Ajanlar için çift yönlü Git senkronizasyonlu hafıza" },
+                    { name: "Gemini Voice & Multimodal", context: "Stüdyo kalitesinde seslendirme ve medya analizi" },
+                  ],
+                },
+                {
+                  title: "Linux & Sunucu Altyapısı",
+                  icon: <Server className="w-5 h-5 text-emerald-400" />,
+                  items: [
+                    { name: "Ubuntu Server", context: "Sunucu yönetimi, systemd servisleri ve log analizi" },
+                    { name: "Docker & Portainer", context: "İzole servisler ve konteyner orkestrasyonu" },
+                    { name: "Reverse Proxy & SSH Tunnels", context: "Güvenli uzaktan erişim ve port yönetimi" },
+                    { name: "PM2 Process Manager", context: "24/7 çalışan arka plan iş parçacıkları kümesi" },
+                  ],
+                },
+                {
+                  title: "Mühendislik & Hidrolik",
+                  icon: <Gauge className="w-5 h-5 text-amber-400" />,
+                  items: [
+                    { name: "EN 81-20 Standartları", context: "Hidrolik asansör güvenlik ve mühendislik normları" },
+                    { name: "Debi, Basınç & Motor Gücü", context: "Silindir çapı ve pompa debisi hesapları" },
+                    { name: "Valfler & Güç Üniteleri", context: "Blain hidrolik valf seçimi ve tank kapasitesi" },
+                    { name: "Dinamik ROP Modellemesi", context: "İstatistiksel talep varyansına göre emniyet stoku" },
+                  ],
+                },
+                {
+                  title: "Teşhis & Donanım Araştırmaları",
+                  icon: <Wrench className="w-5 h-5 text-rose-400" />,
+                  items: [
+                    { name: "OBD-II & ELM327", context: "Araç ECU sensör verileri ve arıza kodu teşhisi" },
+                    { name: "NOx & DPF Emisyon Sistemleri", context: "Sensör sinyal döngüleri ve egzoz analizleri" },
+                    { name: "QR Kod Entegrasyonu", context: "Mobil cihazlarla depo stok hareketi takibi" },
+                    { name: "HTTP Error Debugging", context: "401, 503, CORS ve timeout kök neden çözümleri" },
+                  ],
+                },
+              ].map((category, idx) => (
+                <div key={idx} className="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-slate-800 rounded-xl border border-slate-700/60">
+                      {category.icon}
+                    </div>
+                    <h4 className="text-sm font-bold text-white">{category.title}</h4>
+                  </div>
+
+                  <div className="space-y-2.5 pt-1">
+                    {category.items.map((item, iIdx) => (
+                      <div key={iIdx} className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-0.5">
+                        <div className="text-xs font-bold text-indigo-300 font-mono">{item.name}</div>
+                        <div className="text-[11px] text-slate-400">{item.context}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: INTERACTIVE TERMINAL */}
         {activeTab === "terminal" && (
           <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-8 font-mono shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -821,13 +1233,13 @@ export default function Home() {
                 <div className="w-3 h-3 rounded-full bg-red-500/80" />
                 <div className="w-3 h-3 rounded-full bg-amber-500/80" />
                 <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
-                <span className="text-xs text-slate-400 ml-2">murat@systems-architect:~ (zsh)</span>
+                <span className="text-xs text-slate-400 ml-2">murat@problem-solver:~ (zsh)</span>
               </div>
-              <span className="text-[11px] text-slate-500">v2.5.0-interactive</span>
+              <span className="text-[11px] text-slate-500">v3.0.0-cli</span>
             </div>
 
             {/* Terminal History */}
-            <div className="space-y-4 min-h-[280px] max-h-[450px] overflow-y-auto text-xs sm:text-sm pr-2">
+            <div className="space-y-4 min-h-[300px] max-h-[480px] overflow-y-auto text-xs sm:text-sm pr-2">
               {terminalHistory.map((item, idx) => (
                 <div key={idx} className="space-y-1">
                   <div className="flex items-center gap-2 text-indigo-400 font-bold">
@@ -849,7 +1261,7 @@ export default function Home() {
                 type="text"
                 value={terminalInput}
                 onChange={(e) => setTerminalInput(e.target.value)}
-                placeholder='Komut yazın (örn: "whoami", "projects", "quote", "help")'
+                placeholder='Komut yazın (örn: "whoami", "felsefe", "hidrolik", "qr-stok", "help")'
                 className="flex-1 bg-transparent border-none outline-none text-white font-mono text-xs sm:text-sm placeholder:text-slate-600"
                 autoFocus
               />
@@ -860,206 +1272,6 @@ export default function Home() {
                 Çalıştır
               </button>
             </form>
-          </div>
-        )}
-
-        {/* TAB 4: SKILLS & CAPABILITIES MATRIX */}
-        {activeTab === "skills" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                category: "Full-Stack & Web Teknolojileri",
-                icon: <Code2 className="w-5 h-5 text-indigo-400" />,
-                skills: [
-                  "Next.js 16 (App Router, Turbopack)",
-                  "React 19 & TypeScript",
-                  "Supabase (PostgreSQL, RLS, Storage)",
-                  "Tailwind CSS v4 & Modern UI",
-                  "Node.js, Express & RESTful APIs",
-                  "jsPDF, Recharts, Responsive Tables",
-                ],
-              },
-              {
-                category: "Yapay Zekâ & Otonom Ajanlar",
-                icon: <Bot className="w-5 h-5 text-cyan-400" />,
-                skills: [
-                  "Autonomous Agent Mimarisi (Hermes)",
-                  "Gemini 2.5 Flash Voice & Multimodal",
-                  "LLM Proxying, Routing & Failover",
-                  "Obsidian Vault Kalıcı Hafıza Sync",
-                  "RAG, Semantic Search & Sentinel QA",
-                  "Multi-Agent Orkestrasyonu",
-                ],
-              },
-              {
-                category: "Programatik Medya & Video",
-                icon: <Video className="w-5 h-5 text-pink-400" />,
-                skills: [
-                  "Remotion React 24fps Kinematik Render",
-                  "FFmpeg Audio/Video Mastering",
-                  "EBU R128 Ses Normalizasyonu",
-                  "Kinetic Karaoke Altyazı Senkronizasyonu",
-                  "YouTube Data API v3 Entegrasyonu",
-                  "Headless Otomasyon & Vektörel Animasyon",
-                ],
-              },
-              {
-                category: "Mühendislik & Endüstriyel Analitik",
-                icon: <Cpu className="w-5 h-5 text-amber-400" />,
-                skills: [
-                  "EN 81-20 Hidrolik Asansör Standartları",
-                  "Silindir, Pompa, Valf Seçim Algoritmaları",
-                  "Dinamik ROP (Reorder Point) Hesaplama",
-                  "İstatistiksel Emniyet Stoku Modellemesi",
-                  "MES Atölye QR Üretim Takip Mimarisi",
-                  "Tekliften İmalata ERP Entegrasyonu",
-                ],
-              },
-              {
-                category: "DevOps & Sunucu & Altyapı",
-                icon: <Server className="w-5 h-5 text-emerald-400" />,
-                skills: [
-                  "Linux (Ubuntu/Debian) Yönetimi",
-                  "PM2 Process & Daemon Cluster",
-                  "Docker & Container Yapılandırması",
-                  "Git, GitHub Actions & CI/CD",
-                  "Vercel Edge & Cloudflare Workers",
-                  "Sıfır Maliyetli Yüksek Erişilebilirlik",
-                ],
-              },
-              {
-                category: "Mühendislik Prensipleri",
-                icon: <Shield className="w-5 h-5 text-purple-400" />,
-                skills: [
-                  "Deterministik ve Test Edilebilir Kod",
-                  "Sıfır Halüsinasyon ve Kitabi Doğruluk",
-                  "Mobil Odaklı Temiz Dokunmatik UX",
-                  "Fail-Safe Hata Toleransı & İzleme",
-                  "Performans ve Bellek Optimizasyonu",
-                  "Sürekli Otomasyon & Sıfır Manuel İş Yükü",
-                ],
-              },
-            ].map((group, idx) => (
-              <div
-                key={idx}
-                className="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between hover:border-slate-700 transition-all hover:shadow-lg"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-slate-800 rounded-2xl border border-slate-700/60">
-                      {group.icon}
-                    </div>
-                    <h4 className="text-base font-bold text-white">{group.category}</h4>
-                  </div>
-                  <ul className="space-y-2.5 pt-2">
-                    {group.skills.map((s, sIdx) => (
-                      <li key={sIdx} className="flex items-center gap-2 text-xs text-slate-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                        <span>{s}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* TAB 5: CV & EXPERIENCE */}
-        {activeTab === "cv" && (
-          <div className="space-y-8">
-            <div className="bg-gradient-to-r from-indigo-950/40 via-purple-950/20 to-slate-900 border border-indigo-500/30 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-              <div>
-                <span className="text-xs font-mono text-indigo-400 font-bold">PROFESYONEL ÖZGEÇMİŞ</span>
-                <h2 className="text-2xl sm:text-3xl font-black text-white mt-1">Murat Kuşcu</h2>
-                <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl">
-                  Makine Mühendisliği temelli Full-Stack Yazılım Geliştirici & Otonom AI Sistemleri Mimarı.
-                </p>
-              </div>
-
-              <button
-                onClick={() => window.print()}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/30 shrink-0"
-              >
-                <Download className="w-4 h-4" />
-                CV Yazdır / PDF Kaydet
-              </button>
-            </div>
-
-            {/* Experience Timeline */}
-            <div className="relative border-l-2 border-slate-800 ml-4 pl-6 space-y-8">
-              {[
-                {
-                  period: "2024 — Günümüz",
-                  title: "Lead Full-Stack & Autonomous AI Systems Architect",
-                  org: "Bağımsız Projeler & Otonom Ağ",
-                  desc: "Next.js 16 ve Supabase tabanlı BLAIN ERP & MES sisteminin mimarisi; 9 kanallı 24/7 otonom YouTube medya üretim motorunun ve çoklu AI yönlendiricilerinin (OmniRoute) tasarımı.",
-                  points: [
-                    "20'den fazla modülden oluşan BLAIN ERP platformunu Next.js 16, Supabase ve PostgreSQL ile sıfırdan inşa etti.",
-                    "Remotion, FFmpeg ve Gemini 2.5 Voice entegrasyonuyla günde 100+ videoyu sıfır manuel müdahaleyle üreten otonom pipeline kurdu.",
-                    "Obsidian Vault tabanlı deterministik ajan hafızası senkronizasyon protokolünü geliştirdi.",
-                  ],
-                },
-                {
-                  period: "2020 — 2024",
-                  title: "Makine Mühendisi & Sistem Entegratörü",
-                  org: "Hidrolik & Asansör Mühendisliği Çözümleri",
-                  desc: "EN 81-20 hidrolik asansör projeleri, teknik hesaplamalar, imalat planlama, malzeme ihtiyaç planlaması (MRP) ve stok optimizasyonu.",
-                  points: [
-                    "Silindir, tandem piston, valf ve güç ünitesi hesaplama algoritmalarını modelledi.",
-                    "İstatistiksel volatiliteye dayalı dinamik ROP emniyet stoku modelleri ile atıl stokları minimize etti.",
-                    "Atölye iş emirleri ve kalite kontrol süreçlerini dijitalleştirdi.",
-                  ],
-                },
-              ].map((exp, idx) => (
-                <div key={idx} className="relative group">
-                  <div className="absolute -left-[31px] top-1.5 w-3.5 h-3.5 rounded-full bg-slate-950 border-2 border-indigo-500 group-hover:scale-125 transition-transform" />
-                  <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h3 className="text-lg font-bold text-white">{exp.title}</h3>
-                      <span className="text-xs font-mono text-indigo-400 px-3 py-1 bg-indigo-500/10 rounded-full border border-indigo-500/20">
-                        {exp.period}
-                      </span>
-                    </div>
-                    <div className="text-xs font-bold text-slate-400">{exp.org}</div>
-                    <p className="text-xs text-slate-300 leading-relaxed">{exp.desc}</p>
-                    <ul className="space-y-1.5 pt-1">
-                      {exp.points.map((pt, pIdx) => (
-                        <li key={pIdx} className="flex items-start gap-2 text-xs text-slate-400">
-                          <span className="text-indigo-400 mt-0.5">•</span>
-                          <span>{pt}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Education & Core Values */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-3">
-                <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
-                  <GraduationCap className="w-5 h-5" />
-                  <span>Eğitim & Mühendislik Temeli</span>
-                </div>
-                <div className="text-sm text-white font-bold">Makine Mühendisliği (B.Sc.)</div>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Termodinamik, akışkanlar mekaniği, hidrolik tahrik sistemleri, sonlu elemanlar analizi ve algoritmik problem çözme disiplini.
-                </p>
-              </div>
-
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-3">
-                <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
-                  <Award className="w-5 h-5" />
-                  <span>Yazılım & Mühendislik Felsefesi</span>
-                </div>
-                <div className="text-sm text-white font-bold">Deterministik Hassasiyet & Otomasyon</div>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Yazılımda tahmine veya jenerik şablonlara yer yoktur; her hesaplama kitabi formüllere, her mimari test edilmiş deterministik işleyişe dayanmalıdır.
-                </p>
-              </div>
-            </div>
           </div>
         )}
       </main>
@@ -1074,11 +1286,11 @@ export default function Home() {
           </div>
 
           <h2 className="text-3xl sm:text-4xl font-black text-white">
-            Birlikte Yeni Projeler İnşa Edelim
+            Birlikte Yeni Sistemler ve Çözümler Kuralım
           </h2>
 
-          <p className="text-slate-300 text-sm max-w-lg mx-auto leading-relaxed">
-            Full-Stack web uygulamaları (Next.js & Supabase), endüstriyel mühendislik modellemesi veya otonom yapay zekâ pipeline&apos;ları için dilediğiniz zaman ulaşabilirsiniz.
+          <p className="text-slate-300 text-xs sm:text-base max-w-xl mx-auto leading-relaxed">
+            Teknik bir problemi çözmek, iş süreçlerinizi otomatize etmek, hidrolik mühendislik hesaplamaları veya modern web & AI agent projeleri üzerine görüşmek için her zaman ulaşabilirsiniz.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
@@ -1117,9 +1329,9 @@ export default function Home() {
             GitHub: @kscmrt
           </a>
           <span>•</span>
-          <span>Next.js 16 & Supabase Ready</span>
+          <span>Next.js 16 & Supabase</span>
           <span>•</span>
-          <span>Mechanical Engineer & Systems Architect</span>
+          <span>Problem Solver • Technology • Automation</span>
         </div>
         <p>© {new Date().getFullYear()} Murat Kuşcu. Tüm hakları saklıdır.</p>
       </footer>
