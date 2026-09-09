@@ -13,10 +13,15 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Murat Kuşcu | Multidisipliner Sistem Kurucu & Mühendis",
-  description: "Gerçek dünyadaki problemleri teknoloji, otomasyon ve yapay zekâ ile çözen mühendis ve sistem mimarı.",
-  keywords: ["Murat Kuşcu", "Portfolio", "Full Stack Developer", "Mechanical Engineer", "AI Agents", "Next.js", "Hydraulic Systems"],
-  authors: [{ name: "Murat Kuşcu" }],
+  title: "Murat | Full-Stack & Autonomous AI Systems Engineer",
+  description: "Portfolyo ve CV — Full-Stack Web Geliştirme, Otonom AI Ajanları, Medya Otomasyonu ve Sistem Mimarisi.",
+  keywords: ["Murat", "Portfolio", "Full Stack Developer", "AI Agent Engineer", "Next.js", "TypeScript", "Python", "Autonomous Systems"],
+  authors: [{ name: "Murat" }],
+  openGraph: {
+    title: "Murat | Full-Stack & Autonomous AI Systems Engineer",
+    description: "Portfolyo ve CV — Full-Stack Web, AI Ajanları ve Sistem Mimarisi.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -26,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className={`${inter.variable} ${jetbrainsMono.variable} scroll-smooth`}>
-      <body className="min-h-screen bg-[#fbfbfd] text-[#1d1d1f] font-sans antialiased selection:bg-[#0071e3] selection:text-white">
+      <body className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white">
         {children}
       </body>
     </html>
